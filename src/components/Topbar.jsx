@@ -4,7 +4,7 @@ import { exportToJPG, exportToPDF, saveProject, loadProjectFile } from '../utils
 
 const MAX_CANVAS_W = 1600;
 
-export function Topbar({ stageRef, onFeedback }) {
+export function Topbar({ stageRef, onFeedback, onAbout }) {
   const fileInputRef = useRef(null);
   const mapFileName = useEditorStore(s => s.mapFileName);
   const canvasW = useEditorStore(s => s.canvasW);
@@ -131,6 +131,14 @@ export function Topbar({ stageRef, onFeedback }) {
         style={{ borderColor: 'var(--purple)', color: 'var(--purple)' }}
       >
         💡 Feedback
+      </button>
+      <button
+        className="tb-btn"
+        onClick={onAbout}
+        title="About MCOO Generator"
+        style={{ borderColor: 'var(--muted)', color: 'var(--muted)' }}
+      >
+        ℹ About
       </button>
     </div>
   );

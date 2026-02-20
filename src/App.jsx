@@ -8,6 +8,7 @@ import { StatusBar } from './components/StatusBar';
 import { CalloutEditor } from './components/CalloutEditor';
 import { ContextMenu } from './components/ContextMenu';
 import { FeedbackModal } from './components/FeedbackModal';
+import { AboutModal } from './components/AboutModal';
 
 const MAX_CANVAS_W = 1600;
 
@@ -27,6 +28,7 @@ export default function App() {
   const [contextMenu, setContextMenu] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // ── Keyboard shortcuts ─────────────────────────────────────────────────
   useEffect(() => {
@@ -39,6 +41,7 @@ export default function App() {
         setContextMenu(null);
         setCalloutEl(null);
         setFeedbackOpen(false);
+        setAboutOpen(false);
         return;
       }
 
@@ -107,7 +110,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <Topbar stageRef={stageRef} onFeedback={() => setFeedbackOpen(true)} />
+      <Topbar stageRef={stageRef} onFeedback={() => setFeedbackOpen(true)} onAbout={() => setAboutOpen(true)} />
 
       <div className="main-layout">
         <Toolbar />
@@ -160,6 +163,10 @@ export default function App() {
 
       {feedbackOpen && (
         <FeedbackModal onClose={() => setFeedbackOpen(false)} />
+      )}
+
+      {aboutOpen && (
+        <AboutModal onClose={() => setAboutOpen(false)} />
       )}
 
       {contextMenu && (
