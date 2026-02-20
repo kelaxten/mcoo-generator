@@ -1,7 +1,24 @@
 import jsPDF from 'jspdf';
+import { useEditorStore } from '../store/useEditorStore';
+
+function withFullScale(stage, fn) {
+  const { canvasW, canvasH } = useEditorStore.getState();
+  const prevScaleX = stage.scaleX();
+  const prevW = stage.width();
+  const prevH = stage.height();
+  stage.scaleX(1); stage.scaleY(1);
+  stage.width(canvasW); stage.height(canvasH);
+  const result = fn();
+  stage.scaleX(prevScaleX); stage.scaleY(prevScaleX);
+  stage.width(prevW); stage.height(prevH);
+  return result;
+}
 
 export function exportToJPG(stageRef, filename = 'MCOO_export.jpg') {
-  const dataUrl = stageRef.current.toDataURL({ mimeType: 'image/jpeg', quality: 0.95, pixelRatio: 2 });
+  const stage = stageRef.current;
+  const dataUrl = withFullScale(stage, () =>
+    stage.toDataURL({ mimeType: 'image/jpeg', quality: 0.95, pixelRatio: 2 })
+  );
   const a = document.createElement('a');
   a.download = filename;
   a.href = dataUrl;
@@ -9,7 +26,10 @@ export function exportToJPG(stageRef, filename = 'MCOO_export.jpg') {
 }
 
 export function exportToPNG(stageRef, filename = 'MCOO_export.png') {
-  const dataUrl = stageRef.current.toDataURL({ mimeType: 'image/png', pixelRatio: 2 });
+  const stage = stageRef.current;
+  const dataUrl = withFullScale(stage, () =>
+    stage.toDataURL({ mimeType: 'image/png', pixelRatio: 2 })
+  );
   const a = document.createElement('a');
   a.download = filename;
   a.href = dataUrl;
@@ -17,7 +37,10 @@ export function exportToPNG(stageRef, filename = 'MCOO_export.png') {
 }
 
 export function exportToPDF(stageRef, canvasW, canvasH, filename = 'MCOO_export.pdf') {
-  const dataUrl = stageRef.current.toDataURL({ mimeType: 'image/jpeg', quality: 0.95, pixelRatio: 2 });
+  const stage = stageRef.current;
+  const dataUrl = withFullScale(stage, () =>
+    stage.toDataURL({ mimeType: 'image/jpeg', quality: 0.95, pixelRatio: 2 })
+  );
 
   const orientation = canvasW >= canvasH ? 'landscape' : 'portrait';
   const pdf = new jsPDF({ orientation, unit: 'px', format: [canvasW, canvasH] });

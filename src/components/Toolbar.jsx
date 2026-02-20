@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useEditorStore } from '../store/useEditorStore';
 import { ELEMENT_REGISTRY, TOOLBAR_SECTIONS } from '../elements/index';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 // Mini SVG icons per element type
 const ICONS = {
@@ -267,6 +268,8 @@ export function Toolbar() {
   const addElement = useEditorStore(s => s.addElement);
   const canvasW = useEditorStore(s => s.canvasW);
   const canvasH = useEditorStore(s => s.canvasH);
+  const isMobile = useIsMobile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [collapsed, setCollapsed] = useState(() => {
     const init = {};
@@ -296,53 +299,83 @@ export function Toolbar() {
     addElement(defaults);
   }
 
+  // Shared section list renderer (used by both desktop sidebar and mobile drawer)
+  function renderSections(onItemClick) {
+    return TOOLBAR_SECTIONS.map(section => {
+      const isCollapsed = collapsed[section.title];
+      return (
+        <div key={section.title} className="tb-section">
+          <button
+            className="tb-section-title"
+            onClick={() => toggleSection(section.title)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              color: 'inherit',
+              font: 'inherit',
+              textAlign: 'left',
+            }}
+          >
+            <span>{section.title}</span>
+            <span style={{
+              fontSize: 11,
+              opacity: 0.65,
+              display: 'inline-block',
+              transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+              transition: 'transform 0.15s',
+              lineHeight: 1,
+              marginLeft: 4,
+            }}>▾</span>
+          </button>
+          {!isCollapsed && section.types.map(type => {
+            const reg = ELEMENT_REGISTRY[type];
+            if (!reg) return null;
+            return (
+              <button key={type} className="tool-btn" onClick={() => onItemClick(type)}>
+                <span className="tool-icon">{ICONS[type]}</span>
+                {reg.label}
+              </button>
+            );
+          })}
+        </div>
+      );
+    });
+  }
+
+  // Mobile: FAB + slide-up drawer
+  if (isMobile) {
+    return (
+      <>
+        <button className="mobile-fab" onClick={() => setDrawerOpen(true)}>
+          ＋&nbsp;Add
+        </button>
+
+        {drawerOpen && (
+          <div className="mobile-drawer-backdrop" onClick={() => setDrawerOpen(false)}>
+            <div className="mobile-drawer" onClick={e => e.stopPropagation()}>
+              <div className="mobile-drawer-handle" />
+              <div className="mobile-sheet-header">
+                <span style={{ fontFamily: 'var(--cond)', fontWeight: 700 }}>Add Element</span>
+                <button onClick={() => setDrawerOpen(false)}>✕</button>
+              </div>
+              {renderSections(type => { spawn(type); setDrawerOpen(false); })}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Desktop: left sidebar (unchanged)
   return (
     <div className="left-toolbar">
-      {TOOLBAR_SECTIONS.map(section => {
-        const isCollapsed = collapsed[section.title];
-        return (
-          <div key={section.title} className="tb-section">
-            <button
-              className="tb-section-title"
-              onClick={() => toggleSection(section.title)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                color: 'inherit',
-                font: 'inherit',
-                textAlign: 'left',
-              }}
-            >
-              <span>{section.title}</span>
-              <span style={{
-                fontSize: 11,
-                opacity: 0.65,
-                display: 'inline-block',
-                transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-                transition: 'transform 0.15s',
-                lineHeight: 1,
-                marginLeft: 4,
-              }}>▾</span>
-            </button>
-            {!isCollapsed && section.types.map(type => {
-              const reg = ELEMENT_REGISTRY[type];
-              if (!reg) return null;
-              return (
-                <button key={type} className="tool-btn" onClick={() => spawn(type)}>
-                  <span className="tool-icon">{ICONS[type]}</span>
-                  {reg.label}
-                </button>
-              );
-            })}
-          </div>
-        );
-      })}
+      {renderSections(spawn)}
     </div>
   );
 }
