@@ -495,6 +495,9 @@ export const ElementRenderer = forwardRef(function ElementRenderer(
       onDragEnd={onDragEnd}
       onTransformEnd={onTransformEnd}
     >
+      {/* Universal hit-target: ensures drag/click registers on all element types,
+          including those whose visual children all have listening={false} */}
+      <Rect x={0} y={0} width={el.w} height={el.h} fill="transparent" />
       <Renderer el={el} />
     </Group>
   );
