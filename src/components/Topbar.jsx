@@ -4,7 +4,7 @@ import { exportToJPG, exportToPDF, saveProject, loadProjectFile } from '../utils
 
 const MAX_CANVAS_W = 1600;
 
-export function Topbar({ stageRef }) {
+export function Topbar({ stageRef, onFeedback }) {
   const fileInputRef = useRef(null);
   const mapFileName = useEditorStore(s => s.mapFileName);
   const canvasW = useEditorStore(s => s.canvasW);
@@ -120,6 +120,17 @@ export function Topbar({ stageRef }) {
         title="Export as PDF"
       >
         ⬇ PDF
+      </button>
+
+      <div className="topbar-sep" />
+
+      <button
+        className="tb-btn"
+        onClick={onFeedback}
+        title="Submit a feature request or bug report"
+        style={{ borderColor: 'var(--purple)', color: 'var(--purple)' }}
+      >
+        💡 Feedback
       </button>
     </div>
   );
