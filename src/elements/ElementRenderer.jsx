@@ -437,6 +437,378 @@ const FooterElement = ({ el }) => (
   </>
 );
 
+// ── Wire / Concertina Obstacle ─────────────────────────────────────────────
+const WireObstacleElement = ({ el }) => {
+  const midY = el.h / 2;
+  const loopCount = Math.max(2, Math.floor(el.w / 18));
+  return (
+    <>
+      <HitRect w={el.w} h={el.h} />
+      <Line points={[0, midY, el.w, midY]} stroke={el.color} strokeWidth={2.5} listening={false} />
+      {Array.from({ length: loopCount }, (_, i) => {
+        const cx = (el.w / loopCount) * i + el.w / loopCount / 2;
+        return (
+          <Circle key={i} x={cx} y={midY - 5} radius={4}
+            stroke={el.color} strokeWidth={1.5} fill="transparent" listening={false}
+          />
+        );
+      })}
+      <Text x={0} y={midY + 12} width={el.w} align="center"
+        text={el.label}
+        fill={el.color} fontFamily="Share Tech Mono, monospace" fontSize={10} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Obstacle Effects: Fix, Block, Disrupt ─────────────────────────────────
+const ObstacleEffectElement = ({ el }) => {
+  const midY = el.h / 2;
+  return (
+    <>
+      <HitRect w={el.w} h={el.h} />
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.10)} stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Text x={0} y={midY - 12} width={el.w} align="center"
+        text={el.label}
+        fill={el.color} fontFamily="Share Tech Mono, monospace"
+        fontSize={18} fontStyle="bold" listening={false}
+      />
+      {el.type === 'obs_fix' && (
+        <>
+          <Arrow points={[10, midY + 12, el.w / 2 - 10, midY + 12]}
+            stroke={el.color} strokeWidth={2} fill={el.color}
+            pointerLength={7} pointerWidth={8} listening={false}
+          />
+          <Arrow points={[el.w - 10, midY + 12, el.w / 2 + 10, midY + 12]}
+            stroke={el.color} strokeWidth={2} fill={el.color}
+            pointerLength={7} pointerWidth={8} listening={false}
+          />
+        </>
+      )}
+      {el.type === 'obs_block' && (
+        <>
+          {[el.w / 2 - 18, el.w / 2, el.w / 2 + 18].map((bx, i) => (
+            <Line key={i} points={[bx, midY + 10, bx, midY + 22]}
+              stroke={el.color} strokeWidth={3} listening={false}
+            />
+          ))}
+          <Line points={[el.w / 2 - 24, midY + 22, el.w / 2 + 24, midY + 22]}
+            stroke={el.color} strokeWidth={3} listening={false}
+          />
+        </>
+      )}
+    </>
+  );
+};
+
+// ── Obstacle Turn ──────────────────────────────────────────────────────────
+const ObstacleTurnElement = ({ el }) => {
+  const midY = el.h / 2;
+  const turnX = el.w * 0.55;
+  return (
+    <>
+      <HitRect w={el.w} h={el.h} />
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.10)} stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Text x={0} y={midY - 20} width={el.w} align="center"
+        text={el.label}
+        fill={el.color} fontFamily="Share Tech Mono, monospace"
+        fontSize={16} fontStyle="bold" listening={false}
+      />
+      <Line points={[el.w * 0.2, midY + 6, turnX, midY + 6, turnX, midY + 22]}
+        stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Arrow points={[turnX, midY + 22, turnX, midY + 34]}
+        stroke={el.color} strokeWidth={2.5} fill={el.color}
+        pointerLength={8} pointerWidth={9} listening={false}
+      />
+    </>
+  );
+};
+
+// ── Minefield Area ─────────────────────────────────────────────────────────
+const MinefieldElement = ({ el }) => {
+  const headerH = 20;
+  const bodyH = el.h - headerH;
+  const cols = Math.max(2, Math.floor(el.w / 28));
+  const rows = Math.max(1, Math.floor(bodyH / 24));
+  const markers = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      markers.push({
+        x: (el.w / cols) * c + el.w / cols / 2,
+        y: headerH + (bodyH / rows) * r + bodyH / rows / 2,
+      });
+    }
+  }
+  return (
+    <>
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.07)} stroke={el.color} strokeWidth={2.5}
+        dash={[7, 4]} listening={false}
+      />
+      <Rect x={0} y={0} width={el.w} height={headerH}
+        fill={hexToRgba(el.color, 0.85)} listening={false}
+      />
+      <Text x={0} y={0} width={el.w} height={headerH}
+        align="center" verticalAlign="middle"
+        text={el.label}
+        fill="white" fontFamily="Share Tech Mono, monospace" fontSize={9} fontStyle="bold" listening={false}
+      />
+      {markers.map((m, i) => (
+        <Group key={i} listening={false}>
+          <Line points={[m.x - 6, m.y - 6, m.x + 6, m.y + 6]} stroke={el.color} strokeWidth={1.5} listening={false} />
+          <Line points={[m.x + 6, m.y - 6, m.x - 6, m.y + 6]} stroke={el.color} strokeWidth={1.5} listening={false} />
+        </Group>
+      ))}
+    </>
+  );
+};
+
+// ── Breach Lane ────────────────────────────────────────────────────────────
+const BreachLaneElement = ({ el }) => {
+  const midY = el.h / 2;
+  return (
+    <>
+      <HitRect w={el.w} h={el.h} />
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.15)} stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Arrow
+        points={[14, midY - 4, el.w - 14, midY - 4]}
+        stroke={el.color} strokeWidth={3} fill={el.color}
+        pointerLength={10} pointerWidth={12} listening={false}
+      />
+      <Text x={0} y={midY + 8} width={el.w} align="center"
+        text={el.label}
+        fill={el.color} fontFamily="Share Tech Mono, monospace" fontSize={10} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Obstacle Group Marker ──────────────────────────────────────────────────
+const ObstacleGroupElement = ({ el }) => {
+  const r = Math.min(el.w, el.h) / 2 - 4;
+  const cx = el.w / 2, cy = el.h / 2;
+  return (
+    <>
+      <Circle x={cx} y={cy} radius={r}
+        fill={hexToRgba(el.color, 0.12)} stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Text x={0} y={cy - 8} width={el.w} align="center"
+        text={el.label}
+        fill={el.color} fontFamily="Share Tech Mono, monospace" fontSize={11} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Mobility Corridor ──────────────────────────────────────────────────────
+const MobCorridorElement = ({ el }) => {
+  const midY = el.h / 2;
+  const lines = el.label.split('\n');
+  return (
+    <>
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.12)} stroke={el.color} strokeWidth={2}
+        dash={[8, 5]} listening={false}
+      />
+      <Arrow
+        points={[16, midY, el.w - 16, midY]}
+        stroke={el.color} strokeWidth={3} fill={el.color}
+        pointerLength={11} pointerWidth={13} listening={false}
+      />
+      <Arrow
+        points={[el.w - 16, midY, 16, midY]}
+        stroke={el.color} strokeWidth={3} fill={el.color}
+        pointerLength={11} pointerWidth={13} listening={false}
+      />
+      <Text x={0} y={8} width={el.w} align="center"
+        text={lines[0] || ''}
+        fill={el.color} fontFamily="Barlow Condensed, sans-serif" fontSize={12} fontStyle="bold" listening={false}
+      />
+      {lines[1] && (
+        <Text x={0} y={el.h - 18} width={el.w} align="center"
+          text={lines[1].toUpperCase()}
+          fill={el.color} fontFamily="Barlow Condensed, sans-serif" fontSize={10} listening={false}
+        />
+      )}
+    </>
+  );
+};
+
+// ── NAI ────────────────────────────────────────────────────────────────────
+const NAIElement = ({ el }) => {
+  const headerH = 20;
+  return (
+    <>
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill="transparent" stroke={el.color} strokeWidth={2}
+        dash={[8, 5]} listening={false}
+      />
+      <Rect x={0} y={0} width={el.w} height={headerH}
+        fill={el.color} listening={false}
+      />
+      <Text x={0} y={0} width={el.w} height={headerH}
+        align="center" verticalAlign="middle"
+        text={el.label}
+        fill="white" fontFamily="Barlow Condensed, sans-serif" fontSize={11} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── TAI ────────────────────────────────────────────────────────────────────
+const TAIElement = ({ el }) => {
+  const headerH = 20;
+  return (
+    <>
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.08)} stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Rect x={0} y={0} width={el.w} height={headerH}
+        fill={hexToRgba(el.color, 0.85)} listening={false}
+      />
+      <Text x={0} y={0} width={el.w} height={headerH}
+        align="center" verticalAlign="middle"
+        text={el.label}
+        fill="#111" fontFamily="Barlow Condensed, sans-serif" fontSize={11} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Decision Point (diamond) ───────────────────────────────────────────────
+const DecisionPointElement = ({ el }) => {
+  const cx = el.w / 2, cy = el.h / 2;
+  const hw = el.w / 2 - 4, hh = el.h / 2 - 4;
+  const pts = [cx, cy - hh, cx + hw, cy, cx, cy + hh, cx - hw, cy];
+  return (
+    <>
+      <Line points={pts} closed
+        stroke={el.color} strokeWidth={2.5}
+        fill={hexToRgba(el.color, 0.15)} listening={false}
+      />
+      <Text x={0} y={cy - 8} width={el.w} align="center"
+        text={el.label}
+        fill={el.color} fontFamily="Share Tech Mono, monospace" fontSize={11} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Phase Line / Limit of Advance ─────────────────────────────────────────
+const PhaseLineElement = ({ el }) => {
+  const midY = el.h / 2;
+  const isLOA = el.type === 'limit_of_advance';
+  const boxW = Math.min(90, Math.max(60, el.w * 0.35));
+  const boxH = 22;
+  return (
+    <>
+      <HitRect w={el.w} h={el.h} />
+      <Line
+        points={[0, midY, el.w, midY]}
+        stroke={el.color} strokeWidth={3}
+        dash={isLOA ? [10, 6] : undefined} listening={false}
+      />
+      <Rect x={el.w / 2 - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH}
+        fill={el.color} cornerRadius={2} listening={false}
+      />
+      <Text
+        x={el.w / 2 - boxW / 2} y={midY - 7} width={boxW} align="center"
+        text={el.label}
+        fill="white" fontFamily="Share Tech Mono, monospace" fontSize={10} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Battle Position ────────────────────────────────────────────────────────
+const BattlePositionElement = ({ el }) => {
+  const headerH = 20;
+  return (
+    <>
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.20)} stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Rect x={0} y={0} width={el.w} height={headerH}
+        fill={hexToRgba(el.color, 0.90)} listening={false}
+      />
+      <Text x={0} y={0} width={el.w} height={headerH}
+        align="center" verticalAlign="middle"
+        text={el.label}
+        fill="white" fontFamily="Share Tech Mono, monospace" fontSize={10} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Engagement Area ────────────────────────────────────────────────────────
+const EngagementAreaElement = ({ el }) => {
+  const headerH = 22;
+  return (
+    <>
+      <Rect x={0} y={0} width={el.w} height={el.h}
+        fill={hexToRgba(el.color, 0.15)} stroke={el.color} strokeWidth={2.5} listening={false}
+      />
+      <Rect x={0} y={0} width={el.w} height={headerH}
+        fill={hexToRgba(el.color, 0.88)} listening={false}
+      />
+      <Text x={0} y={0} width={el.w} height={headerH}
+        align="center" verticalAlign="middle"
+        text={el.label}
+        fill="white" fontFamily="Share Tech Mono, monospace" fontSize={11} fontStyle="bold" listening={false}
+      />
+    </>
+  );
+};
+
+// ── Enemy Axis / Avenue of Advance ────────────────────────────────────────
+const EnemyAxisElement = ({ el }) => {
+  const midY = el.h / 2;
+  const isAvenue = el.type === 'enemy_avenue';
+  const strokeW = isAvenue ? 3 : 5;
+  const ptrL = isAvenue ? 12 : 16;
+  const ptrW = isAvenue ? 14 : 20;
+  const lines = el.label.split('\n');
+  const boxW = Math.min(110, Math.max(80, el.w * 0.5));
+  const boxH = lines[1] ? 30 : 20;
+  const boxX = el.w / 2 - boxW / 2;
+  const boxY = midY - boxH - 4;
+  return (
+    <>
+      <HitRect w={el.w} h={el.h} />
+      <Arrow
+        points={[0, midY, el.w, midY]}
+        stroke={el.color} strokeWidth={strokeW}
+        fill={el.color}
+        pointerLength={ptrL} pointerWidth={ptrW}
+        listening={false}
+      />
+      <Rect x={boxX} y={boxY} width={boxW} height={boxH}
+        fill={hexToRgba(el.color, 0.88)} stroke={el.color} strokeWidth={1.5}
+        cornerRadius={2} listening={false}
+      />
+      <Text x={boxX} y={boxY + 4} width={boxW} align="center"
+        text={lines[0] || ''}
+        fill="white" fontFamily="Barlow Condensed, sans-serif"
+        fontSize={13} fontStyle="bold" listening={false}
+      />
+      {lines[1] && (
+        <Text x={boxX} y={boxY + 17} width={boxW} align="center"
+          text={lines[1].toUpperCase()}
+          fill="white" fontFamily="Barlow Condensed, sans-serif"
+          fontSize={10} listening={false}
+        />
+      )}
+    </>
+  );
+};
+
 // ── Utility ───────────────────────────────────────────────────────────────
 function getCalloutBg(color) {
   const map = {
@@ -449,17 +821,46 @@ function getCalloutBg(color) {
 
 // ── Renderer dispatch table ───────────────────────────────────────────────
 const RENDERERS = {
+  // Terrain
   water: OvalTerrainElement,
   deadground: OvalTerrainElement,
   restrictive: RectTerrainElement,
   severely_restrictive: RectTerrainElement,
+  // Linear obstacles
   obstacle: ObstacleElement,
   rail: ObstacleElement,
+  obs_wire: WireObstacleElement,
+  // Obstacle effects
+  obs_fix: ObstacleEffectElement,
+  obs_block: ObstacleEffectElement,
+  obs_disrupt: ObstacleEffectElement,
+  obs_turn: ObstacleTurnElement,
+  // Obstacle areas
+  obs_minefield: MinefieldElement,
+  obs_breach: BreachLaneElement,
+  obs_group: ObstacleGroupElement,
+  // Tactical
   aa: AAElement,
+  mob_corridor: MobCorridorElement,
   keyterrain: KeyTerrainElement,
   objective: ObjectiveElement,
+  // AOI
+  nai: NAIElement,
+  tai: TAIElement,
+  decisionpoint: DecisionPointElement,
+  // Control measures
+  phase_line: PhaseLineElement,
+  limit_of_advance: PhaseLineElement,
+  battle_position: BattlePositionElement,
+  engagement_area: EngagementAreaElement,
+  // Threat / SITEMP
+  enemy_axis: EnemyAxisElement,
+  enemy_avenue: EnemyAxisElement,
+  threat_area: OvalTerrainElement,
+  // Callouts & labels
   callout: CalloutElement,
   aolabel: AALabelElement,
+  // Map elements
   legend: LegendElement,
   titleblock: TitleBlockElement,
   aoboundary: AOBoundaryElement,
