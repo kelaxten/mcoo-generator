@@ -89,7 +89,7 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
         title="Undo (Ctrl+Z)"
         style={{ opacity: past.length === 0 ? 0.4 : 1 }}
       >
-        ↩ Undo
+        ↩<span className="topbar-desktop-only" style={{ marginLeft: 4 }}>Undo</span>
       </button>
       <button
         className="tb-btn"
@@ -98,7 +98,7 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
         title="Redo (Ctrl+Y)"
         style={{ opacity: future.length === 0 ? 0.4 : 1 }}
       >
-        ↪ Redo
+        ↪<span className="topbar-desktop-only" style={{ marginLeft: 4 }}>Redo</span>
       </button>
 
       {/* Save / Load — desktop only */}
@@ -129,14 +129,14 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
         onClick={() => exportToJPG(stageRef)}
         title="Export as JPG"
       >
-        ⬇ JPG
+        <span className="topbar-desktop-only">⬇ </span>JPG
       </button>
       <button
         className="tb-btn primary"
         onClick={() => exportToPDF(stageRef, canvasW, canvasH)}
         title="Export as PDF"
       >
-        ⬇ PDF
+        <span className="topbar-desktop-only">⬇ </span>PDF
       </button>
 
       {/* Feedback / About — desktop only */}
