@@ -9,6 +9,8 @@ import { CalloutEditor } from './components/CalloutEditor';
 import { ContextMenu } from './components/ContextMenu';
 import { FeedbackModal } from './components/FeedbackModal';
 import { AboutModal } from './components/AboutModal';
+import { Toast } from './components/Toast';
+import { ConfirmModal } from './components/ConfirmModal';
 
 const MAX_CANVAS_W = 1600;
 
@@ -23,12 +25,19 @@ export default function App() {
   const selectElement = useEditorStore(s => s.selectElement);
   const undo = useEditorStore(s => s.undo);
   const redo = useEditorStore(s => s.redo);
+  const clearAll = useEditorStore(s => s.clearAll);
 
   const [calloutEl, setCalloutEl] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+  }, []);
 
   // ── Keyboard shortcuts ─────────────────────────────────────────────────
   useEffect(() => {
@@ -42,6 +51,7 @@ export default function App() {
         setCalloutEl(null);
         setFeedbackOpen(false);
         setAboutOpen(false);
+        setConfirmClear(false);
         return;
       }
 
@@ -110,7 +120,13 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <Topbar stageRef={stageRef} onFeedback={() => setFeedbackOpen(true)} onAbout={() => setAboutOpen(true)} />
+      <Topbar
+        stageRef={stageRef}
+        onFeedback={() => setFeedbackOpen(true)}
+        onAbout={() => setAboutOpen(true)}
+        onClear={() => setConfirmClear(true)}
+        onToast={showToast}
+      />
 
       <div className="main-layout">
         <Toolbar />
@@ -133,7 +149,7 @@ export default function App() {
                 input.click();
               }}
             >
-              <div className="dp-icon">🗺</div>
+              <div className="dp-icon">[MAP]</div>
               <div className="dp-title">Load a Map Image</div>
               <div className="dp-sub">Click "Load Map" in the toolbar or drop an image here</div>
               <div className="dp-sub" style={{ marginTop: 4, opacity: .6 }}>PNG, JPG, WEBP supported</div>
@@ -178,6 +194,18 @@ export default function App() {
             if (el) setCalloutEl(el);
           }}
         />
+      )}
+
+      {confirmClear && (
+        <ConfirmModal
+          message="Clear all MCOO elements from the canvas?"
+          onConfirm={() => { clearAll(); setConfirmClear(false); }}
+          onCancel={() => setConfirmClear(false)}
+        />
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)} />
       )}
     </div>
   );

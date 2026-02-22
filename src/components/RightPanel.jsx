@@ -82,7 +82,7 @@ export function RightPanel({ onEditCallout }) {
                   style={{ width: '100%', justifyContent: 'center' }}
                   onClick={() => onEditCallout(selected)}
                 >
-                  ✏️ Edit Text
+                  [EDT] Edit Text
                 </button>
               </div>
             )}
@@ -92,7 +92,7 @@ export function RightPanel({ onEditCallout }) {
                 style={{ width: '100%', justifyContent: 'center' }}
                 onClick={() => deleteElement(selectedId)}
               >
-                🗑 Delete Element
+                [DEL] Delete Element
               </button>
             </div>
 
@@ -110,13 +110,13 @@ export function RightPanel({ onEditCallout }) {
                   onClick={() => selectElement(el.id)}
                 >
                   <div className="layer-dot" style={{ background: el.color }} />
-                  <span className="layer-name">{el.label.split('\n')[0]}</span>
+                  <span className="layer-name" title={el.label.split('\n')[0]}>{el.label.split('\n')[0]}</span>
                   <span
                     className="layer-vis"
                     title={el.visible ? 'Hide' : 'Show'}
                     onClick={e => { e.stopPropagation(); toggleVisibility(el.id); }}
                   >
-                    {el.visible ? '👁' : '🚫'}
+                    {el.visible ? 'ON' : '--'}
                   </span>
                 </div>
               ))}
@@ -193,7 +193,7 @@ export function RightPanel({ onEditCallout }) {
                   style={{ width: '100%', justifyContent: 'center' }}
                   onClick={() => onEditCallout(selected)}
                 >
-                  ✏️ Edit Text
+                  [EDT] Edit Text
                 </button>
               </div>
             )}
@@ -203,7 +203,7 @@ export function RightPanel({ onEditCallout }) {
                 style={{ width: '100%', justifyContent: 'center' }}
                 onClick={() => deleteElement(selectedId)}
               >
-                🗑 Delete Element
+                [DEL] Delete Element
               </button>
             </div>
           </div>
@@ -221,13 +221,13 @@ export function RightPanel({ onEditCallout }) {
               onClick={() => selectElement(el.id)}
             >
               <div className="layer-dot" style={{ background: el.color }} />
-              <span className="layer-name">{el.label.split('\n')[0]}</span>
+              <span className="layer-name" title={el.label.split('\n')[0]}>{el.label.split('\n')[0]}</span>
               <span
                 className="layer-vis"
                 title={el.visible ? 'Hide' : 'Show'}
                 onClick={e => { e.stopPropagation(); toggleVisibility(el.id); }}
               >
-                {el.visible ? '👁' : '🚫'}
+                {el.visible ? 'ON' : '--'}
               </span>
             </div>
           ))}

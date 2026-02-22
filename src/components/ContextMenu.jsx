@@ -1,12 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useEditorStore } from '../store/useEditorStore';
 
+const TEXT_TYPES = new Set(['callout', 'aolabel']);
+
 export function ContextMenu({ menu, onClose, onEditText }) {
   const ref = useRef(null);
+  const elements = useEditorStore(s => s.elements);
   const duplicateElement = useEditorStore(s => s.duplicateElement);
   const deleteElement = useEditorStore(s => s.deleteElement);
   const bringToFront = useEditorStore(s => s.bringToFront);
   const sendToBack = useEditorStore(s => s.sendToBack);
+  const bringForward = useEditorStore(s => s.bringForward);
+  const sendBackward = useEditorStore(s => s.sendBackward);
 
   useEffect(() => {
     const handler = () => onClose();
@@ -22,12 +27,14 @@ export function ContextMenu({ menu, onClose, onEditText }) {
   // Keep menu inside viewport
   const viewW = window.innerWidth;
   const viewH = window.innerHeight;
-  const menuW = 170;
-  const menuH = 180;
+  const menuW = 180;
+  const menuH = 230;
   const x = Math.min(menu.x, viewW - menuW);
   const y = Math.min(menu.y, viewH - menuH);
 
   const { elementId } = menu;
+  const el = elements.find(e => e.id === elementId);
+  const hasText = el && TEXT_TYPES.has(el.type);
 
   return (
     <div
@@ -36,22 +43,30 @@ export function ContextMenu({ menu, onClose, onEditText }) {
       style={{ left: x, top: y }}
       onClick={e => e.stopPropagation()}
     >
-      <div className="ctx-item" onClick={() => { onEditText(elementId); onClose(); }}>
-        ✏️ Edit Text
-      </div>
+      {hasText && (
+        <div className="ctx-item" onClick={() => { onEditText(elementId); onClose(); }}>
+          [EDT] Edit Text
+        </div>
+      )}
       <div className="ctx-item" onClick={() => { duplicateElement(elementId); onClose(); }}>
-        ⧉ Duplicate
+        [DUP] Duplicate
       </div>
       <div className="ctx-sep" />
       <div className="ctx-item" onClick={() => { bringToFront(elementId); onClose(); }}>
-        ⬆ Bring to Front
+        [TOP] Bring to Front
+      </div>
+      <div className="ctx-item" onClick={() => { bringForward(elementId); onClose(); }}>
+        [+1] Bring Forward
+      </div>
+      <div className="ctx-item" onClick={() => { sendBackward(elementId); onClose(); }}>
+        [-1] Send Backward
       </div>
       <div className="ctx-item" onClick={() => { sendToBack(elementId); onClose(); }}>
-        ⬇ Send to Back
+        [BOT] Send to Back
       </div>
       <div className="ctx-sep" />
       <div className="ctx-item danger" onClick={() => { deleteElement(elementId); onClose(); }}>
-        🗑 Delete
+        [DEL] Delete
       </div>
     </div>
   );
