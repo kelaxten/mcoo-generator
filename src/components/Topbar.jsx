@@ -4,14 +4,13 @@ import { exportToJPG, exportToPDF, saveProject, loadProjectFile } from '../utils
 
 const MAX_CANVAS_W = 1600;
 
-export function Topbar({ stageRef, onFeedback, onAbout }) {
+export function Topbar({ stageRef, onFeedback, onAbout, onClear, onToast }) {
   const fileInputRef = useRef(null);
   const [overflowOpen, setOverflowOpen] = useState(false);
 
   const mapFileName = useEditorStore(s => s.mapFileName);
   const canvasW = useEditorStore(s => s.canvasW);
   const canvasH = useEditorStore(s => s.canvasH);
-  const clearAll = useEditorStore(s => s.clearAll);
   const undo = useEditorStore(s => s.undo);
   const redo = useEditorStore(s => s.redo);
   const past = useEditorStore(s => s.past);
@@ -47,13 +46,37 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
     try {
       const data = await loadProjectFile();
       loadProjectData(data);
+      onToast('[LOAD] Project loaded', 'success');
     } catch (e) {
-      alert('Could not load project: ' + e.message);
+      onToast('[ERR] ' + e.message, 'error');
     }
   }
 
-  function handleClear() {
-    if (window.confirm('Clear all MCOO elements?')) clearAll();
+  function handleExportJPG() {
+    try {
+      exportToJPG(stageRef);
+      onToast('[EXPORT] JPG saved', 'success');
+    } catch (e) {
+      onToast('[ERR] JPG export failed', 'error');
+    }
+  }
+
+  function handleExportPDF() {
+    try {
+      exportToPDF(stageRef, canvasW, canvasH);
+      onToast('[EXPORT] PDF saved', 'success');
+    } catch (e) {
+      onToast('[ERR] PDF export failed', 'error');
+    }
+  }
+
+  function handleSave() {
+    try {
+      saveProject(getProjectData());
+      onToast('[SAVE] Project saved', 'success');
+    } catch (e) {
+      onToast('[ERR] Save failed', 'error');
+    }
   }
 
   return (
@@ -61,10 +84,10 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
       <div className="topbar-logo">MCOO <span>GEN</span></div>
       <div className="topbar-sep" />
 
-      {/* Map loading — icon-only on mobile, full label on desktop */}
+      {/* Map loading */}
       <label>
-        <div className="tb-btn" style={{ cursor: 'pointer' }}>
-          🗺<span className="topbar-desktop-only" style={{ marginLeft: 6 }}>Load Map</span>
+        <div className="tb-btn" style={{ cursor: 'pointer' }} aria-label="Load map image">
+          [MAP]<span className="topbar-desktop-only" style={{ marginLeft: 6 }}>Load Map</span>
         </div>
         <input
           ref={fileInputRef}
@@ -81,65 +104,58 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
 
       <div className="topbar-sep topbar-desktop-only" />
 
-      {/* Undo / Redo — always visible */}
+      {/* Undo / Redo */}
       <button
         className="tb-btn"
         onClick={undo}
         disabled={past.length === 0}
         title="Undo (Ctrl+Z)"
+        aria-label="Undo"
         style={{ opacity: past.length === 0 ? 0.4 : 1 }}
       >
-        ↩ Undo
+        ↩<span className="topbar-desktop-only" style={{ marginLeft: 4 }}>Undo</span>
       </button>
       <button
         className="tb-btn"
         onClick={redo}
         disabled={future.length === 0}
         title="Redo (Ctrl+Y)"
+        aria-label="Redo"
         style={{ opacity: future.length === 0 ? 0.4 : 1 }}
       >
-        ↪ Redo
+        ↪<span className="topbar-desktop-only" style={{ marginLeft: 4 }}>Redo</span>
       </button>
 
       {/* Save / Load — desktop only */}
       <div className="topbar-sep topbar-desktop-only" />
-      <button className="tb-btn topbar-desktop-only" onClick={() => saveProject(getProjectData())} title="Save .mcoo project file">
-        💾 Save
+      <button className="tb-btn topbar-desktop-only" onClick={handleSave} title="Save .mcoo project file">
+        [SAV] Save
       </button>
       <button className="tb-btn topbar-desktop-only" onClick={handleLoad} title="Load .mcoo project file">
-        📂 Open
+        [OPN] Open
       </button>
 
       <div className="topbar-spacer" />
 
-      {/* Clear — desktop only */}
-      <button
-        className="tb-btn danger topbar-desktop-only"
-        onClick={handleClear}
-        title="Clear all elements"
-      >
-        🗑 Clear
-      </button>
-
-      <div className="topbar-sep topbar-desktop-only" />
-
       {/* Export — always visible */}
       <button
         className="tb-btn"
-        onClick={() => exportToJPG(stageRef)}
+        onClick={handleExportJPG}
         title="Export as JPG"
+        aria-label="Export as JPG"
       >
-        ⬇ JPG
+        JPG
       </button>
       <button
         className="tb-btn primary"
-        onClick={() => exportToPDF(stageRef, canvasW, canvasH)}
+        onClick={handleExportPDF}
         title="Export as PDF"
+        aria-label="Export as PDF"
       >
-        ⬇ PDF
+        PDF
       </button>
 
-      {/* Feedback / About — desktop only */}
+      {/* Feedback / About / Clear — desktop only */}
       <div className="topbar-sep topbar-desktop-only" />
       <button
         className="tb-btn topbar-desktop-only"
@@ -147,7 +163,7 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
         title="Submit a feature request or bug report"
         style={{ borderColor: 'var(--purple)', color: 'var(--purple)' }}
       >
-        💡 Feedback
+        [?] Feedback
       </button>
       <button
         className="tb-btn topbar-desktop-only"
@@ -155,7 +171,15 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
         title="About MCOO Generator"
         style={{ borderColor: 'var(--muted)', color: 'var(--muted)' }}
       >
-        ℹ About
+        [i] About
+      </button>
+      <div className="topbar-sep topbar-desktop-only" />
+      <button
+        className="tb-btn danger topbar-desktop-only"
+        onClick={onClear}
+        title="Clear all elements"
+      >
+        [DEL] Clear
       </button>
 
       {/* Mobile-only overflow button */}
@@ -163,29 +187,30 @@ export function Topbar({ stageRef, onFeedback, onAbout }) {
         className="tb-btn topbar-mobile-only"
         onClick={(e) => { e.stopPropagation(); setOverflowOpen(o => !o); }}
         title="More options"
+        aria-label="More options"
       >
-        ⋯
+        [•••]
       </button>
 
       {/* Overflow dropdown */}
       {overflowOpen && (
         <div className="topbar-overflow-menu" onClick={(e) => e.stopPropagation()}>
-          <div className="ctx-item" onClick={() => { saveProject(getProjectData()); setOverflowOpen(false); }}>
-            💾 Save Project
+          <div className="ctx-item" onClick={() => { handleSave(); setOverflowOpen(false); }}>
+            [SAV] Save Project
           </div>
           <div className="ctx-item" onClick={() => { handleLoad(); setOverflowOpen(false); }}>
-            📂 Open Project
-          </div>
-          <div className="ctx-sep" />
-          <div className="ctx-item danger" onClick={() => { handleClear(); setOverflowOpen(false); }}>
-            🗑 Clear All
+            [OPN] Open Project
           </div>
           <div className="ctx-sep" />
           <div className="ctx-item" onClick={() => { onFeedback(); setOverflowOpen(false); }}>
-            💡 Feedback
+            [?] Feedback
           </div>
           <div className="ctx-item" onClick={() => { onAbout(); setOverflowOpen(false); }}>
-            ℹ About
+            [i] About
+          </div>
+          <div className="ctx-sep" />
+          <div className="ctx-item danger" onClick={() => { onClear(); setOverflowOpen(false); }}>
+            [DEL] Clear All
           </div>
         </div>
       )}

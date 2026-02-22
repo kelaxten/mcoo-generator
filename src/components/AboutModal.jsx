@@ -10,12 +10,6 @@ const STACK = [
   { name: 'Vite 5', url: 'https://vite.dev' },
 ];
 
-const MIT_BODY = `Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.`;
-
 export function AboutModal({ onClose }) {
   return (
     <div
@@ -28,7 +22,7 @@ export function AboutModal({ onClose }) {
         style={{
           background: 'var(--surface)',
           border: '2px solid var(--accent)',
-          borderRadius: 8,
+          borderRadius: 1,
           padding: 24,
           width: 520,
           maxWidth: '95vw',
@@ -78,17 +72,17 @@ export function AboutModal({ onClose }) {
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 18,
         }}>
           {[
-            '🔒 No server — runs entirely in your browser',
-            '📁 Save & load .mcoo project files',
-            '🖼 Export JPG or multi-page PDF',
-            '↩ Full undo / redo history',
+            '[S] No server — runs entirely in your browser',
+            '[F] Save & load .mcoo project files',
+            '[E] Export JPG or multi-page PDF',
+            '[Z] Full undo / redo history',
           ].map(f => (
             <div key={f} style={{
               fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)',
               padding: '6px 10px',
               background: 'var(--bg)',
               border: '1px solid var(--border)',
-              borderRadius: 4,
+              borderRadius: 1,
             }}>
               {f}
             </div>
@@ -99,7 +93,7 @@ export function AboutModal({ onClose }) {
         <div style={{
           background: 'var(--bg)',
           border: '1px solid var(--border)',
-          borderRadius: 6,
+          borderRadius: 1,
           padding: '12px 14px',
           marginBottom: 18,
         }}>
@@ -116,7 +110,7 @@ export function AboutModal({ onClose }) {
             <span style={{
               fontFamily: 'var(--mono)', fontSize: 10,
               background: '#238636', color: '#fff',
-              padding: '3px 8px', borderRadius: 4, fontWeight: 700,
+              padding: '3px 8px', borderRadius: 1, fontWeight: 700,
               letterSpacing: 0.5,
             }}>
               MIT License
@@ -124,7 +118,7 @@ export function AboutModal({ onClose }) {
             <span style={{
               fontFamily: 'var(--mono)', fontSize: 10,
               background: '#1f6feb', color: '#fff',
-              padding: '3px 8px', borderRadius: 4, fontWeight: 700,
+              padding: '3px 8px', borderRadius: 1, fontWeight: 700,
               letterSpacing: 0.5,
             }}>
               Open Source
@@ -133,7 +127,7 @@ export function AboutModal({ onClose }) {
               fontFamily: 'var(--mono)', fontSize: 10,
               background: 'var(--surface)', color: 'var(--muted)',
               border: '1px solid var(--border)',
-              padding: '3px 8px', borderRadius: 4,
+              padding: '3px 8px', borderRadius: 1,
             }}>
               Free Forever
             </span>
@@ -148,7 +142,7 @@ export function AboutModal({ onClose }) {
               textDecoration: 'none',
               background: 'var(--surface)',
               border: '1px solid var(--border)',
-              borderRadius: 4,
+              borderRadius: 1,
               padding: '8px 12px',
               color: 'var(--text)',
               transition: 'border-color 0.15s',
@@ -166,7 +160,7 @@ export function AboutModal({ onClose }) {
               </span>
             </div>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)' }}>
-              ↗ View
+              [->] View
             </span>
           </a>
 
@@ -175,28 +169,6 @@ export function AboutModal({ onClose }) {
             lineHeight: 1.5,
           }}>
             Star the repo, fork it, or submit a pull request. Issues and feature requests welcome.
-          </div>
-        </div>
-
-        {/* ── License text ────────────────────────────────────────────── */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{
-            fontFamily: 'var(--cond)', fontWeight: 700, fontSize: 11,
-            color: 'var(--accent)', letterSpacing: 1.5,
-            textTransform: 'uppercase', marginBottom: 8,
-          }}>
-            MIT License
-          </div>
-          <div style={{
-            fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)',
-            background: 'var(--bg)',
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            padding: '10px 12px',
-            lineHeight: 1.55,
-            whiteSpace: 'pre-wrap',
-          }}>
-            {`Copyright (c) 2026 kelaxten\n\n`}{MIT_BODY}
           </div>
         </div>
 
@@ -221,7 +193,7 @@ export function AboutModal({ onClose }) {
                   color: 'var(--text)',
                   background: 'var(--bg)',
                   border: '1px solid var(--border)',
-                  borderRadius: 4,
+                  borderRadius: 1,
                   padding: '4px 10px',
                   textDecoration: 'none',
                   transition: 'border-color 0.15s',
@@ -242,9 +214,9 @@ export function AboutModal({ onClose }) {
           padding: '8px 10px',
           background: 'var(--bg)',
           border: '1px solid var(--border)',
-          borderRadius: 4,
+          borderRadius: 1,
         }}>
-          ⚠ Not an official US Army product. Not affiliated with the Department of Defense.
+          [!] Not an official US Army product. Not affiliated with the Department of Defense.
           For training, planning, and educational purposes only. Always follow applicable
           regulations for handling classified or sensitive information.
         </div>

@@ -102,6 +102,24 @@ export const useEditorStore = create((set, get) => ({
     set({ elements: [el, ...elements.filter(e => e.id !== id)] });
   },
 
+  bringForward: (id) => {
+    const { elements } = get();
+    const idx = elements.findIndex(e => e.id === id);
+    if (idx < 0 || idx === elements.length - 1) return;
+    const arr = [...elements];
+    [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+    set({ elements: arr });
+  },
+
+  sendBackward: (id) => {
+    const { elements } = get();
+    const idx = elements.findIndex(e => e.id === id);
+    if (idx <= 0) return;
+    const arr = [...elements];
+    [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]];
+    set({ elements: arr });
+  },
+
   toggleVisibility: (id) => {
     const { elements } = get();
     set({ elements: elements.map(el => el.id === id ? { ...el, visible: !el.visible } : el) });
