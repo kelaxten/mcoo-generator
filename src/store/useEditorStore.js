@@ -24,13 +24,20 @@ export const useEditorStore = create((set, get) => ({
   past: [],
   future: [],
 
+  // Zoom (user-controlled multiplier on top of auto-fit scale)
+  zoom: 1,
+
   // ── Canvas / Map ──────────────────────────────────────────────────────────
   setMapImage: (dataUrl, fileName, w, h) => set({
     mapDataUrl: dataUrl,
     mapFileName: fileName,
     canvasW: w,
     canvasH: h,
+    zoom: 1,
   }),
+
+  setZoom: (z) => set({ zoom: Math.max(0.25, Math.min(8, z)) }),
+  resetZoom: () => set({ zoom: 1 }),
 
   setCanvasSize: (w, h) => set({ canvasW: w, canvasH: h }),
 

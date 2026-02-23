@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useEditorStore } from '../store/useEditorStore';
-import { exportToJPG, exportToPDF, saveProject, loadProjectFile } from '../utils/exportUtils';
+import { exportToJPG, exportToPNG, exportToPDF, saveProject, loadProjectFile } from '../utils/exportUtils';
 
 const MAX_CANVAS_W = 1600;
 
@@ -9,8 +9,6 @@ export function Topbar({ stageRef, onFeedback, onAbout, onClear, onToast }) {
   const [overflowOpen, setOverflowOpen] = useState(false);
 
   const mapFileName = useEditorStore(s => s.mapFileName);
-  const canvasW = useEditorStore(s => s.canvasW);
-  const canvasH = useEditorStore(s => s.canvasH);
   const undo = useEditorStore(s => s.undo);
   const redo = useEditorStore(s => s.redo);
   const past = useEditorStore(s => s.past);
@@ -52,18 +50,27 @@ export function Topbar({ stageRef, onFeedback, onAbout, onClear, onToast }) {
     }
   }
 
-  function handleExportJPG() {
+  async function handleExportJPG() {
     try {
-      exportToJPG(stageRef);
+      await exportToJPG(stageRef);
       onToast('[EXPORT] JPG saved', 'success');
     } catch (e) {
       onToast('[ERR] JPG export failed', 'error');
     }
   }
 
-  function handleExportPDF() {
+  async function handleExportPNG() {
     try {
-      exportToPDF(stageRef, canvasW, canvasH);
+      await exportToPNG(stageRef);
+      onToast('[EXPORT] PNG saved', 'success');
+    } catch (e) {
+      onToast('[ERR] PNG export failed', 'error');
+    }
+  }
+
+  async function handleExportPDF() {
+    try {
+      await exportToPDF(stageRef);
       onToast('[EXPORT] PDF saved', 'success');
     } catch (e) {
       onToast('[ERR] PDF export failed', 'error');
@@ -141,15 +148,23 @@ export function Topbar({ stageRef, onFeedback, onAbout, onClear, onToast }) {
       <button
         className="tb-btn"
         onClick={handleExportJPG}
-        title="Export as JPG"
+        title="Export as JPG (Ctrl+Shift+E)"
         aria-label="Export as JPG"
       >
         JPG
       </button>
       <button
+        className="tb-btn"
+        onClick={handleExportPNG}
+        title="Export as PNG (lossless)"
+        aria-label="Export as PNG"
+      >
+        PNG
+      </button>
+      <button
         className="tb-btn primary"
         onClick={handleExportPDF}
-        title="Export as PDF"
+        title="Export as PDF (Ctrl+Shift+P)"
         aria-label="Export as PDF"
       >
         PDF

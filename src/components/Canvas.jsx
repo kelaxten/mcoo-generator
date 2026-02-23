@@ -17,12 +17,16 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
   const mapDataUrl = useEditorStore(s => s.mapDataUrl);
   const selectElement = useEditorStore(s => s.selectElement);
   const updateElement = useEditorStore(s => s.updateElement);
+  const zoom = useEditorStore(s => s.zoom);
+  const setZoom = useEditorStore(s => s.setZoom);
 
   const transformerRef = useRef(null);
   const containerRef = useRef(null);
   const [mapImage, setMapImage] = useState(null);
-  const [stageScale, setStageScale] = useState(1);
+  const [autoScale, setAutoScale] = useState(1);
   const isMobile = useIsMobile();
+
+  const effectiveScale = autoScale * zoom;
 
   // Load map image
   useEffect(() => {
@@ -37,11 +41,20 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
     if (!containerRef.current) return;
     const ro = new ResizeObserver(entries => {
       const containerW = entries[0].contentRect.width;
-      setStageScale(containerW < canvasW ? containerW / canvasW : 1);
+      setAutoScale(containerW < canvasW ? containerW / canvasW : 1);
     });
     ro.observe(containerRef.current);
     return () => ro.disconnect();
   }, [canvasW]);
+
+  // Prevent browser Ctrl+scroll zoom on the canvas container
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handler = (e) => { if (e.ctrlKey || e.metaKey) e.preventDefault(); };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, []);
 
   // Sync Transformer to selected node
   useEffect(() => {
@@ -101,14 +114,23 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
     });
   }, [updateElement]);
 
+  // Ctrl+wheel → zoom in/out (pointer-centered)
+  const handleWheel = useCallback((e) => {
+    if (!e.evt.ctrlKey && !e.evt.metaKey) return;
+    e.evt.preventDefault();
+    const factor = e.evt.deltaY < 0 ? 1.1 : 1 / 1.1;
+    setZoom(zoom * factor);
+  }, [zoom, setZoom]);
+
   return (
     <div ref={containerRef} style={{ width: '100%' }}>
       <Stage
         ref={stageRef}
-        width={canvasW * stageScale}
-        height={canvasH * stageScale}
-        scaleX={stageScale}
-        scaleY={stageScale}
+        width={canvasW * effectiveScale}
+        height={canvasH * effectiveScale}
+        scaleX={effectiveScale}
+        scaleY={effectiveScale}
+        onWheel={handleWheel}
         onClick={handleStageClick}
         onTap={handleStageClick}
         style={{ display: 'block', boxShadow: '0 0 40px rgba(0,0,0,0.6)' }}
@@ -145,10 +167,10 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
           ))}
           <Transformer
             ref={transformerRef}
-            borderStroke="#e8c84a"
+            borderStroke="#d98b2a"
             borderStrokeWidth={1.5}
-            anchorFill="#e8c84a"
-            anchorStroke="#0a0e14"
+            anchorFill="#d98b2a"
+            anchorStroke="#00070d"
             anchorStrokeWidth={1}
             anchorSize={isMobile ? 14 : 8}
             anchorCornerRadius={1}

@@ -11,6 +11,7 @@ import { FeedbackModal } from './components/FeedbackModal';
 import { AboutModal } from './components/AboutModal';
 import { Toast } from './components/Toast';
 import { ConfirmModal } from './components/ConfirmModal';
+import { saveProject, exportToJPG, exportToPDF } from './utils/exportUtils';
 
 const MAX_CANVAS_W = 1600;
 
@@ -26,6 +27,11 @@ export default function App() {
   const undo = useEditorStore(s => s.undo);
   const redo = useEditorStore(s => s.redo);
   const clearAll = useEditorStore(s => s.clearAll);
+  const duplicateElement = useEditorStore(s => s.duplicateElement);
+  const bringToFront = useEditorStore(s => s.bringToFront);
+  const sendToBack = useEditorStore(s => s.sendToBack);
+  const resetZoom = useEditorStore(s => s.resetZoom);
+  const getProjectData = useEditorStore(s => s.getProjectData);
 
   const [calloutEl, setCalloutEl] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
@@ -71,10 +77,66 @@ export default function App() {
         redo();
         return;
       }
+
+      // Ctrl+D — duplicate selected
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'd' && !isInput) {
+        e.preventDefault();
+        if (selectedId) duplicateElement(selectedId);
+        return;
+      }
+
+      // Ctrl+0 — reset zoom
+      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        resetZoom();
+        return;
+      }
+
+      // Ctrl+] — bring to front
+      if ((e.ctrlKey || e.metaKey) && e.key === ']') {
+        e.preventDefault();
+        if (selectedId) bringToFront(selectedId);
+        return;
+      }
+
+      // Ctrl+[ — send to back
+      if ((e.ctrlKey || e.metaKey) && e.key === '[') {
+        e.preventDefault();
+        if (selectedId) sendToBack(selectedId);
+        return;
+      }
+
+      // Ctrl+S — save project
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 's') {
+        e.preventDefault();
+        try { saveProject(getProjectData()); showToast('[SAVE] Project saved'); }
+        catch { showToast('[ERR] Save failed', 'error'); }
+        return;
+      }
+
+      // Ctrl+Shift+E — export JPG
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+        e.preventDefault();
+        exportToJPG(stageRef)
+          .then(() => showToast('[EXPORT] JPG saved'))
+          .catch(() => showToast('[ERR] JPG failed', 'error'));
+        return;
+      }
+
+      // Ctrl+Shift+P — export PDF
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
+        e.preventDefault();
+        exportToPDF(stageRef)
+          .then(() => showToast('[EXPORT] PDF saved'))
+          .catch(() => showToast('[ERR] PDF failed', 'error'));
+        return;
+      }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedId, deleteElement, selectElement, undo, redo]);
+  }, [selectedId, deleteElement, selectElement, undo, redo,
+      duplicateElement, bringToFront, sendToBack, resetZoom,
+      getProjectData, showToast, stageRef]);
 
   // ── Map drag-drop on the canvas area ──────────────────────────────────
   function handleAreaDragOver(e) {
