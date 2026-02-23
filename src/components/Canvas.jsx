@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Stage, Layer, Image as KonvaImage, Transformer } from 'react-konva';
+import { Stage, Layer, Line, Image as KonvaImage, Transformer } from 'react-konva';
 import { useEditorStore } from '../store/useEditorStore';
 import { ElementRenderer } from '../elements/ElementRenderer';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -19,6 +19,7 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
   const updateElement = useEditorStore(s => s.updateElement);
   const zoom = useEditorStore(s => s.zoom);
   const setZoom = useEditorStore(s => s.setZoom);
+  const gridSize = useEditorStore(s => s.gridSize);
 
   const transformerRef = useRef(null);
   const containerRef = useRef(null);
@@ -56,26 +57,25 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
     return () => el.removeEventListener('wheel', handler);
   }, []);
 
-  // Sync Transformer to selected node
+  // Sync Transformer to selected node — skip locked elements
   useEffect(() => {
     if (!transformerRef.current || !stageRef.current) return;
-    if (selectedId) {
+    const el = selectedId ? elements.find(e => e.id === selectedId) : null;
+
+    if (selectedId && el && !el.locked) {
       const node = stageRef.current.findOne('#' + selectedId);
       if (node) {
         transformerRef.current.nodes([node]);
-        const el = elements.find(e => e.id === selectedId);
-        if (el) {
-          transformerRef.current.keepRatio(KEEP_RATIO_TYPES.has(el.type));
-          transformerRef.current.rotateEnabled(!NO_ROTATE_TYPES.has(el.type));
-          if (el.type === 'obstacle' || el.type === 'rail') {
-            transformerRef.current.enabledAnchors(['middle-left', 'middle-right']);
-          } else {
-            transformerRef.current.enabledAnchors([
-              'top-left', 'top-center', 'top-right',
-              'middle-right', 'middle-left',
-              'bottom-left', 'bottom-center', 'bottom-right',
-            ]);
-          }
+        transformerRef.current.keepRatio(KEEP_RATIO_TYPES.has(el.type));
+        transformerRef.current.rotateEnabled(!NO_ROTATE_TYPES.has(el.type));
+        if (el.type === 'obstacle' || el.type === 'rail') {
+          transformerRef.current.enabledAnchors(['middle-left', 'middle-right']);
+        } else {
+          transformerRef.current.enabledAnchors([
+            'top-left', 'top-center', 'top-right',
+            'middle-right', 'middle-left',
+            'bottom-left', 'bottom-center', 'bottom-right',
+          ]);
         }
       } else {
         transformerRef.current.nodes([]);
@@ -93,34 +93,50 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
   }, [selectElement]);
 
   const handleDragEnd = useCallback((el, e) => {
-    updateElement(el.id, {
-      x: Math.round(e.target.x()),
-      y: Math.round(e.target.y()),
-    });
-  }, [updateElement]);
+    // Locked elements snap back to their stored position
+    if (el.locked) {
+      e.target.x(el.x);
+      e.target.y(el.y);
+      e.target.getLayer()?.batchDraw();
+      return;
+    }
+    const s = (v) => gridSize > 0 ? Math.round(v / gridSize) * gridSize : Math.round(v);
+    updateElement(el.id, { x: s(e.target.x()), y: s(e.target.y()) });
+  }, [updateElement, gridSize]);
 
   const handleTransformEnd = useCallback((el, e) => {
+    if (el.locked) return;
     const node = e.target;
     const scaleX = node.scaleX();
     const scaleY = node.scaleY();
     node.scaleX(1);
     node.scaleY(1);
+    const s = (v) => gridSize > 0 ? Math.round(v / gridSize) * gridSize : Math.round(v);
     updateElement(el.id, {
-      x: Math.round(node.x()),
-      y: Math.round(node.y()),
+      x: s(node.x()),
+      y: s(node.y()),
       w: Math.max(20, Math.round(el.w * scaleX)),
       h: Math.max(20, Math.round(el.h * scaleY)),
       rotation: node.rotation(),
     });
-  }, [updateElement]);
+  }, [updateElement, gridSize]);
 
-  // Ctrl+wheel → zoom in/out (pointer-centered)
+  // Ctrl+wheel → zoom in/out
   const handleWheel = useCallback((e) => {
     if (!e.evt.ctrlKey && !e.evt.metaKey) return;
     e.evt.preventDefault();
     const factor = e.evt.deltaY < 0 ? 1.1 : 1 / 1.1;
     setZoom(zoom * factor);
   }, [zoom, setZoom]);
+
+  // Build grid lines
+  const gridLines = [];
+  if (gridSize > 0) {
+    for (let y = 0; y <= canvasH; y += gridSize)
+      gridLines.push(<Line key={`h${y}`} points={[0, y, canvasW, y]} stroke="rgba(255,255,255,0.07)" strokeWidth={0.5} />);
+    for (let x = 0; x <= canvasW; x += gridSize)
+      gridLines.push(<Line key={`v${x}`} points={[x, 0, x, canvasH]} stroke="rgba(255,255,255,0.07)" strokeWidth={0.5} />);
+  }
 
   return (
     <div ref={containerRef} style={{ width: '100%' }}>
@@ -140,10 +156,7 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
           {mapImage ? (
             <KonvaImage image={mapImage} x={0} y={0} width={canvasW} height={canvasH} />
           ) : (
-            <KonvaImage
-              x={0} y={0} width={canvasW} height={canvasH}
-              fillAfterStrokeEnabled={false}
-            />
+            <KonvaImage x={0} y={0} width={canvasW} height={canvasH} fillAfterStrokeEnabled={false} />
           )}
         </Layer>
 
@@ -178,6 +191,13 @@ export function Canvas({ stageRef, onContextMenu, onDblClickElement }) {
             padding={4}
           />
         </Layer>
+
+        {/* Grid overlay layer */}
+        {gridSize > 0 && (
+          <Layer listening={false}>
+            {gridLines}
+          </Layer>
+        )}
       </Stage>
     </div>
   );

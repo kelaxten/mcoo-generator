@@ -3,6 +3,7 @@ import { useEditorStore } from '../store/useEditorStore';
 import { exportToJPG, exportToPNG, exportToPDF, saveProject, loadProjectFile } from '../utils/exportUtils';
 
 const MAX_CANVAS_W = 1600;
+const GRID_SIZES = [0, 20, 40, 80];
 
 export function Topbar({ stageRef, onFeedback, onAbout, onClear, onToast }) {
   const fileInputRef = useRef(null);
@@ -16,6 +17,13 @@ export function Topbar({ stageRef, onFeedback, onAbout, onClear, onToast }) {
   const setMapImage = useEditorStore(s => s.setMapImage);
   const getProjectData = useEditorStore(s => s.getProjectData);
   const loadProjectData = useEditorStore(s => s.loadProjectData);
+  const gridSize = useEditorStore(s => s.gridSize);
+  const setGridSize = useEditorStore(s => s.setGridSize);
+
+  function cycleGrid() {
+    const idx = GRID_SIZES.indexOf(gridSize);
+    setGridSize(GRID_SIZES[(idx + 1) % GRID_SIZES.length]);
+  }
 
   // Close overflow menu when clicking outside
   useEffect(() => {
@@ -140,6 +148,15 @@ export function Topbar({ stageRef, onFeedback, onAbout, onClear, onToast }) {
       </button>
       <button className="tb-btn topbar-desktop-only" onClick={handleLoad} title="Load .mcoo project file">
         [OPN] Open
+      </button>
+
+      {/* Grid snap toggle — desktop only */}
+      <button
+        className={`tb-btn topbar-desktop-only${gridSize > 0 ? ' primary' : ''}`}
+        onClick={cycleGrid}
+        title={gridSize > 0 ? `Grid snap: ${gridSize}px — click to cycle (20 → 40 → 80 → off)` : 'Enable grid snap'}
+      >
+        [G:{gridSize > 0 ? gridSize : '--'}]
       </button>
 
       <div className="topbar-spacer" />

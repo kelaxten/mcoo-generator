@@ -213,6 +213,24 @@ body {
 }
 .layer-vis:hover { opacity: 1; color: var(--accent); }
 
+.layer-drag-handle {
+  cursor: grab; opacity: .35; font-size: 10px; padding: 2px 3px;
+  font-family: var(--mono); flex-shrink: 0;
+}
+.layer-drag-handle:hover { opacity: .8; }
+
+.layer-lock {
+  cursor: pointer; opacity: .4; font-size: 10px; padding: 2px 3px;
+  font-family: var(--mono); flex-shrink: 0;
+}
+.layer-lock:hover { opacity: 1; }
+.layer-lock.active { opacity: 1; color: var(--accent); }
+
+.layer-item.drag-over { border-color: var(--accent); background: rgba(217,139,42,0.08); }
+.layer-item.locked .layer-name { color: var(--muted); }
+
+.prop-input[type=number] { width: 48px; padding: 4px 4px; text-align: right; }
+
 .statusbar {
   height: 22px;
   background: var(--surface);

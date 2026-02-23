@@ -27,6 +27,9 @@ export const useEditorStore = create((set, get) => ({
   // Zoom (user-controlled multiplier on top of auto-fit scale)
   zoom: 1,
 
+  // Grid snap (0 = off, otherwise pixel size)
+  gridSize: 0,
+
   // ── Canvas / Map ──────────────────────────────────────────────────────────
   setMapImage: (dataUrl, fileName, w, h) => set({
     mapDataUrl: dataUrl,
@@ -38,6 +41,7 @@ export const useEditorStore = create((set, get) => ({
 
   setZoom: (z) => set({ zoom: Math.max(0.25, Math.min(8, z)) }),
   resetZoom: () => set({ zoom: 1 }),
+  setGridSize: (n) => set({ gridSize: n }),
 
   setCanvasSize: (w, h) => set({ canvasW: w, canvasH: h }),
 
@@ -130,6 +134,23 @@ export const useEditorStore = create((set, get) => ({
   toggleVisibility: (id) => {
     const { elements } = get();
     set({ elements: elements.map(el => el.id === id ? { ...el, visible: !el.visible } : el) });
+  },
+
+  toggleLock: (id) => {
+    const { elements } = get();
+    set({ elements: elements.map(el => el.id === id ? { ...el, locked: !el.locked } : el) });
+  },
+
+  reorderElement: (fromId, toId) => {
+    const { elements } = get();
+    const fromIdx = elements.findIndex(e => e.id === fromId);
+    const toIdx   = elements.findIndex(e => e.id === toId);
+    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+    const arr = [...elements];
+    const [el] = arr.splice(fromIdx, 1);
+    arr.splice(fromIdx < toIdx ? toIdx - 1 : toIdx, 0, el);
+    get()._pushHistory(elements);
+    set({ elements: arr });
   },
 
   // ── History ───────────────────────────────────────────────────────────────
